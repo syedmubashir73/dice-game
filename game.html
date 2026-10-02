@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Methods — Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top, #1b4332, #0d2818);
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+            color: #f1faee;
+            padding: 20px;
+        }
+
+        .board {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .top-nav {
+            margin-bottom: 16px;
+        }
+
+        .back-link {
+            color: #ffd166;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            transition: transform .2s ease, color .2s ease;
+        }
+        .back-link:hover { transform: translateX(-4px); color: #fff; }
+        .back-link:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 3px; }
+
+        h1.title {
+            text-align: center;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-size: 1.4rem;
+            color: #ffd166;
+            margin-bottom: 24px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-around;
+            align-items: stretch;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .team {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .team.active {
+            transform: translateY(-6px);
+        }
+
+        .teamA.active {
+            border-color: #e63946;
+            box-shadow: 0 0 24px rgba(230, 57, 70, 0.5);
+        }
+
+        .teamB.active {
+            border-color: #457b9d;
+            box-shadow: 0 0 24px rgba(69, 123, 157, 0.5);
+        }
+
+        .teamC.active {
+            border-color: #2a9d8f;
+            box-shadow: 0 0 24px rgba(42, 157, 143, 0.5);
+        }
+
+        .team h4 {
+            margin: 0 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .total {
+            font-size: 2.4rem;
+            font-weight: bold;
+            margin: 0 0 8px;
+        }
+
+        .teamA .total { color: #e63946; }
+        .teamB .total { color: #457b9d; }
+        .teamC .total { color: #2a9d8f; }
+
+        .stats-box {
+            font-size: 0.85rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        /* 4x4 Grid Dice for 1-12 Pip patterns */
+        .dice {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 16px;
+            background: #f1faee;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            padding: 8px;
+            gap: 2px;
+            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.05);
+        }
+
+        .dice.rolling {
+            animation: shake 0.15s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: rotate(-6deg); }
+            50% { transform: rotate(6deg); }
+            100% { transform: rotate(-6deg); }
+        }
+
+        .pip {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #1b4332;
+            align-self: center;
+            justify-self: center;
+            opacity: 0;
+        }
+
+        button {
+            background: #ffd166;
+            border: none;
+            color: #1b4332;
+            font-weight: bold;
+            padding: 10px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.15s, opacity 0.15s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .turns-box {
+            text-align: center;
+            padding-top: 15px;
+            width: 100%;
+        }
+
+        .turns-box h4 {
+            margin: 0;
+            opacity: 0.7;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .turns-box h2 {
+            margin: 4px 0 0;
+        }
+
+        .announcement {
+            height: 24px;
+            color: #ffd166;
+            font-weight: bold;
+            margin-top: 8px;
+            font-size: 0.95rem;
+        }
+
+        .banner {
+            display: none;
+            text-align: center;
+            margin-top: 28px;
+            padding: 18px;
+            border-radius: 14px;
+            background: rgba(255, 209, 102, 0.15);
+            border: 2px solid #ffd166;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffd166;
+        }
+
+        .banner.show {
+            display: block;
+        }
+
+        .reset {
+            display: block;
+            margin: 16px auto 0;
+        }
+
+        /* ---- UX enhancements ---- */
+        body { opacity: 0; animation: pageFade .5s ease forwards; }
+        @keyframes pageFade { to { opacity: 1; } }
+
+        h1.title { opacity: 0; animation: dropIn .6s cubic-bezier(.16,1,.3,1) forwards; }
+        @keyframes dropIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+
+        .team {
+            opacity: 0;
+            transform: translateY(24px);
+            animation: teamIn .6s cubic-bezier(.16,1,.3,1) forwards;
+        }
+        .team:nth-child(1) { animation-delay: .08s; }
+        .team:nth-child(2) { animation-delay: .18s; }
+        .team:nth-child(3) { animation-delay: .28s; }
+        @keyframes teamIn { to { opacity: 1; transform: translateY(0); } }
+
+        .team.active { animation: teamIn .6s cubic-bezier(.16,1,.3,1) forwards, activePulse 2.2s ease-in-out .6s infinite; }
+        @keyframes activePulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.08); }
+        }
+
+        .pip { transition: opacity .18s ease; }
+
+        .total span {
+            display: inline-block;
+            transition: transform .2s ease;
+        }
+        .total.bump span {
+            animation: scoreBump .4s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes scoreBump {
+            0% { transform: scale(1); }
+            45% { transform: scale(1.35); }
+            100% { transform: scale(1); }
+        }
+
+        button { transition: transform .15s ease, opacity .15s ease, box-shadow .2s ease; }
+        button:hover:not(:disabled) { box-shadow: 0 8px 20px -6px rgba(255,209,102,.6); }
+        button:active:not(:disabled) { transform: scale(.96); }
+        button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+        .banner.show {
+            animation: bannerIn .5s cubic-bezier(.16,1,.3,1) forwards;
+        }
+        @keyframes bannerIn {
+            from { opacity: 0; transform: translateY(14px) scale(.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .announcement { transition: opacity .2s ease; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="board">
+        <div class="top-nav">
+            <a href="secondindex.html" class="back-link">&larr; Back to Main Hub</a>
+        </div>
+        <h1 class="title">Dice Game — First to 50 wins</h1>
+
+        <div class="row">
+            <!-- Team A -->
+            <div class="team teamA active" id="card_0">
+                <h4>Team A</h4>
+                <div class="total"><span id="total_0">0</span></div>
+                <div class="stats-box">
+                    Avg Roll: <span id="avg_0">0.00</span><br>
+                    Best: <span id="best_0">-</span> | Worst: <span id="worst_0">-</span>
+                </div>
+                <div class="dice" id="dice_0">
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                </div>
+                <button id="roll_btn_0">Roll Dice</button>
+            </div>
+
+            <!-- Team B -->
+            <div class="team teamB" id="card_1">
+                <h4>Team B</h4>
+                <div class="total"><span id="total_1">0</span></div>
+                <div class="stats-box">
+                    Avg Roll: <span id="avg_1">0.00</span><br>
+                    Best: <span id="best_1">-</span> | Worst: <span id="worst_1">-</span>
+                </div>
+                <div class="dice" id="dice_1">
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                </div>
+                <button id="roll_btn_1">Roll Dice</button>
+            </div>
+
+            <!-- Team C -->
+            <div class="team teamC" id="card_2">
+                <h4>Team C</h4>
+                <div class="total"><span id="total_2">0</span></div>
+                <div class="stats-box">
+                    Avg Roll: <span id="avg_2">0.00</span><br>
+                    Best: <span id="best_2">-</span> | Worst: <span id="worst_2">-</span>
+                </div>
+                <div class="dice" id="dice_2">
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                    <div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                </div>
+                <button id="roll_btn_2">Roll Dice</button>
+            </div>
+        </div>
+
+        <div class="turns-box">
+            <h4>Turns Taken (A : B : C)</h4>
+            <h2><span id="turns_0">0</span> : <span id="turns_1">0</span> : <span id="turns_2">0</span></h2>
+            <div class="announcement" id="announcement"></div>
+        </div>
+
+        <div class="banner" id="banner"></div>
+        <button class="reset" id="reset_btn" style="display:none;">Play Again</button>
+    </div>
+
+    <script>
+        const WIN_SCORE = 50;
+        let activeIndex = 0;
+
+        let teams = [
+            { name: "Team A", total: 0, turns: 0, best: null, worst: null },
+            { name: "Team B", total: 0, turns: 0, best: null, worst: null },
+            { name: "Team C", total: 0, turns: 0, best: null, worst: null }
+        ];
+
+        // Pip map for 4x4 Grid (Indices 0 to 15)
+        const pipMap = {
+            1:  [5],                                  // Center-ish dot
+            2:  [0, 15],                              // Top-Left, Bottom-Right
+            3:  [0, 5, 15],                           // Diagonal line
+            4:  [0, 3, 12, 15],                        // 4 Corners
+            5:  [0, 3, 5, 12, 15],                     // 4 Corners + Center
+            6:  [0, 3, 4, 7, 12, 15],                  // 2 vertical columns of 3
+            7:  [0, 3, 4, 5, 7, 12, 15],               // 6 + center
+            8:  [0, 1, 2, 3, 12, 13, 14, 15],          // Top & Bottom rows
+            9:  [0, 2, 3, 4, 6, 7, 12, 13, 15],         // Balanced grid of 9
+            10: [0, 1, 2, 3, 4, 7, 12, 13, 14, 15],     // Outer ring top/bottom + sides
+            11: [0, 1, 2, 3, 4, 5, 7, 12, 13, 14, 15],  // 10 + center
+            12: [0, 1, 2, 3, 4, 7, 8, 11, 12, 13, 14, 15] // Outer border ring (3x4)
+        };
+
+        const banner = document.getElementById("banner");
+        const resetBtn = document.getElementById("reset_btn");
+        const announcement = document.getElementById("announcement");
+
+        const generateNumber = () => {
+            return Math.ceil(Math.random() * 12);
+        };
+
+        // Render dot patterns for ALL numbers 1 through 12
+        const showFace = (diceIdx, number) => {
+            const diceEl = document.getElementById(`dice_${diceIdx}`);
+            const pips = diceEl.querySelectorAll(".pip");
+
+            pips.forEach(p => p.style.opacity = 0);
+            if (pipMap[number]) {
+                pipMap[number].forEach(i => pips[i].style.opacity = 1);
+            }
+        };
+
+        const animateRoll = (diceIdx, finalNumber, onDone) => {
+            const diceEl = document.getElementById(`dice_${diceIdx}`);
+            diceEl.classList.add("rolling");
+            let ticks = 0;
+            const spin = setInterval(() => {
+                showFace(diceIdx, generateNumber());
+                ticks++;
+                if (ticks > 8) {
+                    clearInterval(spin);
+                    diceEl.classList.remove("rolling");
+                    showFace(diceIdx, finalNumber);
+                    onDone();
+                }
+            }, 60);
+        };
+
+        const updateControls = () => {
+            teams.forEach((_, idx) => {
+                const card = document.getElementById(`card_${idx}`);
+                const btn = document.getElementById(`roll_btn_${idx}`);
+                if (idx === activeIndex) {
+                    card.classList.add("active");
+                    btn.disabled = false;
+                } else {
+                    card.classList.remove("active");
+                    btn.disabled = true;
+                }
+            });
+        };
+
+        const checkWinner = () => {
+            const currentTeam = teams[activeIndex];
+            if (currentTeam.total >= WIN_SCORE) {
+                teams.forEach((_, idx) => {
+                    document.getElementById(`roll_btn_${idx}`).disabled = true;
+                    document.getElementById(`card_${idx}`).classList.remove("active");
+                });
+
+                banner.innerHTML = `🏆 ${currentTeam.name} wins immediately with ${currentTeam.total} points!`;
+                banner.classList.add("show");
+                resetBtn.style.display = "block";
+                return true;
+            }
+            return false;
+        };
+
+        const processTurn = () => {
+            const currentTeam = teams[activeIndex];
+            document.getElementById(`roll_btn_${activeIndex}`).disabled = true;
+            announcement.innerText = "";
+
+            const diceResult = generateNumber();
+
+            animateRoll(activeIndex, diceResult, () => {
+                let pointsAdded = diceResult;
+                if (diceResult === 6) {
+                    pointsAdded = diceResult * 2;
+                    announcement.innerText = `🔥 ${currentTeam.name} rolled a 6! DOUBLE POINTS (+12)!`;
+                }
+
+                currentTeam.total += pointsAdded;
+                currentTeam.turns += 1;
+
+                if (currentTeam.best === null || diceResult > currentTeam.best) {
+                    currentTeam.best = diceResult;
+                }
+                if (currentTeam.worst === null || diceResult < currentTeam.worst) {
+                    currentTeam.worst = diceResult;
+                }
+
+                const average = (currentTeam.total / currentTeam.turns).toFixed(2);
+
+                document.getElementById(`total_${activeIndex}`).innerText = currentTeam.total;
+                const totalBox = document.getElementById(`total_${activeIndex}`).parentElement;
+                totalBox.classList.remove("bump");
+                void totalBox.offsetWidth;
+                totalBox.classList.add("bump");
+                document.getElementById(`turns_${activeIndex}`).innerText = currentTeam.turns;
+                document.getElementById(`avg_${activeIndex}`).innerText = average;
+                document.getElementById(`best_${activeIndex}`).innerText = currentTeam.best;
+                document.getElementById(`worst_${activeIndex}`).innerText = currentTeam.worst;
+
+                if (checkWinner()) return;
+
+                activeIndex = (activeIndex + 1) % teams.length;
+                updateControls();
+            });
+        };
+
+        const resetGame = () => {
+            teams = [
+                { name: "Team A", total: 0, turns: 0, best: null, worst: null },
+                { name: "Team B", total: 0, turns: 0, best: null, worst: null },
+                { name: "Team C", total: 0, turns: 0, best: null, worst: null }
+            ];
+
+            activeIndex = 0;
+            announcement.innerText = "";
+
+            teams.forEach((_, idx) => {
+                document.getElementById(`total_${idx}`).innerText = 0;
+                document.getElementById(`turns_${idx}`).innerText = 0;
+                document.getElementById(`avg_${idx}`).innerText = "0.00";
+                document.getElementById(`best_${idx}`).innerText = "-";
+                document.getElementById(`worst_${idx}`).innerText = "-";
+                showFace(idx, 1);
+                document.getElementById(`dice_${idx}`)
+                    .querySelectorAll(".pip")
+                    .forEach(p => p.style.opacity = 0);
+            });
+
+            banner.classList.remove("show");
+            resetBtn.style.display = "none";
+            updateControls();
+        };
+
+        teams.forEach((_, idx) => {
+            document.getElementById(`roll_btn_${idx}`).addEventListener('click', processTurn);
+        });
+        resetBtn.addEventListener('click', resetGame);
+
+        updateControls();
+    </script>
+</body>
+
+</html>
